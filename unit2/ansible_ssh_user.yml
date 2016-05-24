@@ -20,11 +20,11 @@
                   line="AllowUsers artemit@192.168.1.200 ansible@192.168.2.4"
                   state=present
 
-     - name: SSH service must be restarted
-       service: name=sshd state=restarted
+    - name: SSH service must be restarted
+      service: name=sshd state=restarted
 
-     - name: Create ansible user, set password, add id to group wheel
-       user: name=ansible comment="Ansible User" password={{ sudo_sha512_pass }} groups=wheel state=present
+    - name: Create ansible user, set password, add id to group wheel
+      user: name=ansible comment="Ansible User" password={{ sudo_sha512_pass }} groups=wheel state=present
       
-     - name: Add ansible authorized_key
-       authorized_key: user=ansible key="{{ lookup('file','/home/ansible/.ssh/id_rsa.pub') }}"
+    - name: Add ansible authorized_key
+      authorized_key: user=ansible key="{{ lookup('file','/home/ansible/.ssh/id_rsa.pub') }}"
