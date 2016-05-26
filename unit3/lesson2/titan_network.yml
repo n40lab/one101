@@ -1,0 +1,52 @@
+---
+- hosts: titan.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  vars:
+    bridges:
+     - name: mgmt0
+       address: 192.168.2.3
+       prefix: 24
+       netmask: 255.255.255.0
+       gateway: 192.168.2.254
+       dns1: 192.168.2.4
+       zone: management
+
+     - name: blcr0
+       address: 192.168.4.3
+       prefix: 24
+       netmask: 255.255.255.0
+       zone: balancer
+
+     - name: stor0
+       address: 192.168.5.3
+       prefix: 24
+       netmask: 255.255.255.0
+       zone: storage
+
+    interfaces:
+     - name: em1
+       bridge: mgmt0
+       zone: management
+
+     - name: p2p1
+       bridge: blcr0
+       zone: balancer
+
+     - name: p4p1
+       bridge: stor0
+       zone: storage
+
+  tasks:
+  - name: configure interfaces
+    template: src=./network_templates/ifcfg-bridge.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.name }} owner=root group=root mode="u=rw,g=r,o=r"
+    with_items: "{{bridges}}"
+  - name: configure interfaces
+    template: src=./network_templates/ifcfg-bridged.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.name }} owner=root group=root mode="u=rw,g=r,o=r"
+    with_items: "{{interfaces}}"
+  - name: restart network service
+    service: name=network state=restarted
+
+

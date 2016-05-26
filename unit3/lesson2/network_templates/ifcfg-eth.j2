@@ -1,0 +1,16 @@
+DEVICE={{ item.name }}
+BOOTPROTO=none
+ONBOOT=yes
+TYPE=Ethernet
+IPADDR={{ item.address }}
+NETMASK={{ item.netmask }}
+PREFIX={{ item.prefix }}
+{% if item.gateway is defined %} 
+GATEWAY={{ item.gateway }}
+{% endif %}  
+{% if item.dns1 is defined %}  
+DNS1={{ item.dns1 }}
+{% endif %}  
+{% if item.zone is defined %}  
+ZONE={{ item.zone }} 
+{% endif %}

@@ -1,0 +1,13 @@
+DEVICE={{ item.name }}
+DEVICETYPE=TeamPort
+ONBOOT=yes
+{% if item.master is defined %}
+TEAM_MASTER={{ item.master }}
+{% endif %}
+{% if item.priority is defined %}
+TEAM_PORT_CONFIG='{"prio": {{ item.priority }} }'
+{% endif %}
+{% if item.zone %}
+ZONE={{ item.zone }}
+{% endif %}
+

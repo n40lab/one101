@@ -1,0 +1,26 @@
+---
+- hosts: all
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: install firewalld
+    yum: name=firewalld state=latest
+  - name: start firewalld service
+    service: name=firewalld state=started
+  - name: enable firewalld service
+    service: name=firewalld enabled=yes
+  - name: add firewall zone - management
+    command: /usr/bin/firewall-cmd --new-zone=management --permanent
+    ignore_errors: yes
+  - name: add firewall zone - storage
+    command: /usr/bin/firewall-cmd --new-zone=storage --permanent
+    ignore_errors: yes
+  - name: add firewall zone - balancer
+    command: /usr/bin/firewall-cmd --new-zone=balancer --permanent
+    ignore_errors: yes
+  - name: add service SSH - management
+    command: /usr/bin/firewall-cmd --zone=management --add-service=ssh --permanent
+   
+

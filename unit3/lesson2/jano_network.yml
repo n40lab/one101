@@ -1,0 +1,42 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+
+  vars:
+    interfaces:
+     - name: enp14s0
+       address: 192.168.2.4
+       prefix: 24
+       netmask: 255.255.255.0
+       gateway: 192.168.2.254
+       dns1: 192.168.2.254
+       zone: management
+
+     - name: enp1s0
+       address: 192.168.3.4
+       prefix: 24
+       netmask: 255.255.255.0
+       zone: public
+
+     - name: enp5s0
+       address: 192.168.4.4
+       prefix: 24
+       netmask: 255.255.255.0
+       zone: balanced
+
+     - name: enp9s0
+       address: 192.168.5.4
+       prefix: 24
+       netmask: 255.255.255.0
+       zone: storage
+
+  tasks:
+  - name: configure interfaces
+    template: src=./network_templates/ifcfg-eth.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.name }} owner=root group=root mode="u=rw,g=r,o=r"
+    with_items: "{{interfaces}}"
+  - name: restart server
+    command: /usr/sbin/shutdown -r now
+    ignore_errors: yes
