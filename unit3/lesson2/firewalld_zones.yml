@@ -22,5 +22,5 @@
     ignore_errors: yes
   - name: add service SSH - management
     command: /usr/bin/firewall-cmd --zone=management --add-service=ssh --permanent
-   
-
+  - name: reload firewall-cmd
+    command: /usr/bin/firewall-cmd --reload
