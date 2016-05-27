@@ -1,0 +1,10 @@
+---
+- hosts: all
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  
+  tasks:
+  - name: SELinux permissive
+    selinux: policy=targeted state=permissive

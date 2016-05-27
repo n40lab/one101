@@ -1,0 +1,16 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+
+  tasks:
+  - name: ensure we have EPEL repo
+    yum: name=epel-release state=latest
+  - name: install MariaDB packages
+    yum: name=mariadb-server
+  - name: start MariaDB service
+    service: name=mariadb state=started
+  - name: enable MariaDB service
+    service: name=mariadb enabled=yes

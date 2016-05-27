@@ -37,6 +37,3 @@
   - name: configure interfaces
     template: src=./network_templates/ifcfg-eth.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ item.name }} owner=root group=root mode="u=rw,g=r,o=r"
     with_items: "{{interfaces}}"
-  - name: restart server
-    command: /usr/sbin/shutdown -r now
-    ignore_errors: yes
