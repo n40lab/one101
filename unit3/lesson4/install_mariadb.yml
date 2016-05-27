@@ -8,9 +8,29 @@
   tasks:
   - name: ensure we have EPEL repo
     yum: name=epel-release state=latest
-  - name: install MariaDB packages
+  - name: install MariaDB packages (server)
     yum: name=mariadb-server
+  - name: install MariaDB packages (client)
+    yum: name=mariadb-client
+  - name: install MariaDB packages
+    yum: name=python-mysqldb
   - name: start MariaDB service
     service: name=mariadb state=started
   - name: enable MariaDB service
     service: name=mariadb enabled=yes
+  - name: remove all anonymous users
+    mysql_user: name='' host_all=yes state=absent
+  - name: remove test database
+    mysql_db: name=test state=absent
+  - name: add root password
+    mysql_user: login_user=root login_password="" name=root password="{{ mysql_root_password }}"
+  - name: add root password to my.cnf file
+    template:  src=./root_mycnf.j2 dest=~/.my.cnf mode=0600
+  - name: create database for OpenNebula 
+    mysql_db: name="{{ mysql_onedb_dbname }}" state=present
+  - name: add oneadmin user to OpenNebula database
+    mysql_user: login_user=root login_password="{{ mysql_root_password }}" name="{{ mysql_onedb_user }}" password="{{ mysql_onedb_password }}" priv="{{ mysql_onedb_dbname }}".*:ALL
+  - name: create database for PowerDNS
+    mysql_db: name="{{ mysql_pdns_dbname }}" state=present
+  - name: add pdns user to PowerDNS database
+    mysql_user: login_user=root login_password="{{ mysql_root_password }}" name="{{ mysql_pdns_user }}" password="{{ mysql_pdns_password }}" priv="{{ mysql_pdns_dbname }}".*:ALL
