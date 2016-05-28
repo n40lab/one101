@@ -1,0 +1,73 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: root
+  vars: 
+    services:
+      - pdns
+      - pdns-recursor  
+  tasks:
+  - name: ensure we have EPEL repo
+    yum: name=epel-release state=latest
+  - name: install PDNS and other useful packages
+    yum: name={{ item }} state=latest
+    with_items: 
+      - pdns 
+      - pdns-tools 
+      - pdns-backend-mysql 
+      - pdns-recursor 
+      - net-tools 
+      - bind-utils 
+      - jq
+      - MySQL-python
+  - name: import PDNS database
+    mysql_db: state=import name=pdns target=/usr/share/doc/pdns-backend-mysql-4.0.0/schema.mysql.sql login_user=pdns login_password='pdnsp4ss'
+    ignore_errors: yes
+  - name: configure PDNS pdns.conf recursor
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='recursor=' line='recursor=127.0.0.1'
+  - name: configure PDNS pdns.conf local address
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='local-address=' line='local-address=192.168.2.4'
+  - name: configure PDNS pdns.conf allow recursion
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='allow-recursion=' line='allow-recursion=192.168.2.0/24'
+  - name: configure PDNS pdns.conf experimental json interface
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='api=' line='api=yes'
+  - name: configure PDNS pdns.conf experimental interface api key
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='api-key=' line='api-key=changeme'
+  - name: configure PDNS API log file
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='api-logfile=' line='api-logfile=/var/log/pdns.log'
+  - name: configure PDNS pdns.conf webserver for API
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='webserver=' line='webserver=yes'
+  - name: configure PDNS pdns.conf webserver listen on management IP addr
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='webserver-address=' line='webserver-address=192.168.2.4'
+  - name: configure PDNS pdns.conf webserver allow from management subnet
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='webserver-allow-from=' line='webserver-allow-from=192.168.2.0/24'
+  - name: configure PDNS pdns.conf remove launch=bind
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='launch=bind' line=''
+  - name: configure PDNS pdns.conf mysql launch
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='launch=gmysql' line='launch=gmysql'
+  - name: configure PDNS pdns.conf mysql host
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='gmysql-host=' line='gmysql-host=127.0.0.1'
+  - name: configure PDNS pdns.conf mysql user
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='gmysql-user=' line='gmysql-user=pdns'
+  - name: configure PDNS pdns.conf mysql database
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='gmysql-dbname=' line='gmysql-dbname=pdns'
+  - name: configure PDNS pdns.conf mysql password
+    lineinfile: dest=/etc/pdns/pdns.conf regexp='gmysql-password' line='gmysql-password=pdnsp4ss'
+  - name: configure PDNS recursor 
+    lineinfile: dest=/etc/pdns-recursor/recursor.conf regexp='allow-from=' line='allow-from=127.0.0.0/8, 192.168.2.0/24'
+  - name: start PDNS services
+    service: name={{ item }} state=restarted
+    with_items: "{{ services }}"
+  - name: enable PDNS services
+    service: name={{ item }} enabled=yes
+    with_items: "{{ services }}"
+  - name: add dns service to service management
+    command: /usr/bin/firewall-cmd --zone=management --add-service=dns --permanent
+  - name: add 8081 web port to management zone
+    command: /usr/bin/firewall-cmd --zone=management --add-port=8081/tcp --permanent
+  - name: reload firewall
+    command: /usr/bin/firewall-cmd --reload
+  - name: change DNS 
+    lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-enp14s0  regexp='DNS1=' line='DNS1=192.168.2.4'
+  - name: restart network
+    service: name=network state=restarted
+

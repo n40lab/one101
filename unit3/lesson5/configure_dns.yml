@@ -1,0 +1,106 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: root
+  vars: 
+    server_uri_zones: 'http://192.168.2.4:8081/api/v1/servers/localhost/zones'
+    key: 'changeme'
+    nameserver: 'ns1.artemit.mgmt.'
+    domains:
+      - "artemit.mgmt."
+      - "artemit.stor."
+      - "artemit.blcr."
+      - "artemit.public."
+    hosts:
+        - name: "jano.artemit.mgmt."
+          ip: "192.168.2.4"
+          domain: "artemit.mgmt."
+        - name: "prometeo.artemit.mgmt."
+          ip: "192.168.2.2"
+          domain: "artemit.mgmt."
+        - name: "titan.artemit.mgmt."
+          ip: "192.168.2.3"
+          domain: "artemit.mgmt."
+        - name: "atlas.artemit.mgmt."
+          ip: "192.168.2.1"
+          domain: "artemit.mgmt."
+        - name: "gw.artemit.mgmt."
+          ip: "192.168.2.254"
+          domain: "artemit.mgmt."
+        - name: "sw.artemit.mgmt."
+          ip: "192.168.2.253"
+          domain: "artemit.mgmt."
+        - name: "prometeo.artemit.blcr."
+          ip: "192.168.4.2"
+          domain: "artemit.blcr."
+        - name: "titan.artemit.blcr."
+          ip: "192.168.4.3"
+          domain: "artemit.blcr."
+        - name: "jano.artemit.blcr."
+          ip: "192.168.4.4"
+          domain: "artemit.blcr."
+        - name: "atlas.artemit.stor."
+          ip: "192.168.5.1"
+          domain: "artemit.stor."
+        - name: "prometeo.artemit.stor."
+          ip: "192.168.5.2"
+          domain: "artemit.stor."
+        - name: "titan.artemit.stor."
+          ip: "192.168.5.3"
+          domain: "artemit.stor."
+        - name: "jano.artemit.stor."
+          ip: "192.168.5.4"
+          domain: "artemit.stor."
+        - name: "gw.artemit.public."
+          ip: "192.168.3.254"
+          domain: "artemit.public."
+        - name: "jano.artemit.public."
+          ip: "192.168.3.4"
+          domain: "artemit.public."
+    aliases:
+        - name: "ns1.artemit.mgmt."
+          alias: "jano.artemit.mgmt."
+          domain: "artemit.mgmt."
+
+  tasks:
+  - name: add domains
+    uri:  
+        method: POST 
+        body_format: json 
+        body: {"name":"{{item}}","kind":"Master","dnssec":false,"masters":[],"nameservers":["{{nameserver}}"]} 
+        headers: 
+           X-API-Key: "{{key}}" 
+        status_code: 201 
+        url: "{{server_uri_zones}}"
+    with_items: "{{domains}}"
+
+  - name: add SOA records for domains
+    uri: 
+        method: PATCH 
+        body_format: json 
+        body: {"rrsets":[{"name":"{{item}}","type":"SOA","ttl":3600,"changetype":"REPLACE","records":[{"content":"{{nameserver}} hostmaster.artemit.com.es. 0 10800 3600 604800 3600","disabled":false}]}]} 
+        headers:
+           X-API-Key: "{{key}}" 
+        url: "{{server_uri_zones}}/{{item}}"
+    with_items: "{{domains}}"
+
+  - name: add A records
+    uri: 
+        method: PATCH 
+        body_format: json 
+        body: {"rrsets":[{"name":"{{item.name}}","type":"A","ttl":86400,"changetype":"REPLACE","records":[{"content":"{{item.ip}}","disabled":false}]}]} 
+        headers:
+            X-API-Key: "{{key}}" 
+        url: "{{server_uri_zones}}/{{item.domain}}"
+    with_items: "{{hosts}}"
+
+  - name: add CNAME records
+    uri: 
+        method: PATCH 
+        body_format: json 
+        body: {"rrsets":[{"name":"{{item.name}}","type":"CNAME","ttl":86400,"changetype":"REPLACE","records":[{"content":"{{item.alias}}","disabled":false}]}]} 
+        headers: 
+           X-API-Key: "{{key}}"
+        url: "{{server_uri_zones}}/{{item.domain}}" 
+    with_items: "{{aliases}}"
+
+  

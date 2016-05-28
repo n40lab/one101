@@ -1,0 +1,8 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: root
+  tasks:
+  - name: install yum plugin priorities
+    yum: name=yum-plugin-priorities state=latest
+  - name: add PDNS repository
+    get_url: dest=/etc/yum.repos.d/powerdns-auth-40.repo url=https://repo.powerdns.com/repo-files/centos-auth-40.repo mode=0644
