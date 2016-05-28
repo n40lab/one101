@@ -1,6 +1,9 @@
 ---
 - hosts: jano.artemit.mgmt
-  remote_user: root
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
   vars: 
     services:
       - pdns
@@ -20,40 +23,40 @@
       - jq
       - MySQL-python
   - name: import PDNS database
-    mysql_db: state=import name=pdns target=/usr/share/doc/pdns-backend-mysql-4.0.0/schema.mysql.sql login_user=pdns login_password='pdnsp4ss'
+    mysql_db: state=import name="{{ mysql_pdns_dbname }}" target=/usr/share/doc/pdns-backend-mysql-4.0.0/schema.mysql.sql login_user="{{ mysql_pdns_user }}" login_password="{{ mysql_pdns_password }}"
     ignore_errors: yes
   - name: configure PDNS pdns.conf recursor
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='recursor=' line='recursor=127.0.0.1'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="recursor=" line="recursor=127.0.0.1"
   - name: configure PDNS pdns.conf local address
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='local-address=' line='local-address=192.168.2.4'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="local-address=" line="local-address=192.168.2.4"
   - name: configure PDNS pdns.conf allow recursion
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='allow-recursion=' line='allow-recursion=192.168.2.0/24'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="allow-recursion=" line="allow-recursion=192.168.2.0/24"
   - name: configure PDNS pdns.conf experimental json interface
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='api=' line='api=yes'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="api=" line="api=yes"
   - name: configure PDNS pdns.conf experimental interface api key
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='api-key=' line='api-key=changeme'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="api-key=" line="api-key={{ pdns_api_key }}"
   - name: configure PDNS API log file
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='api-logfile=' line='api-logfile=/var/log/pdns.log'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="api-logfile=" line="api-logfile=/var/log/pdns.log"
   - name: configure PDNS pdns.conf webserver for API
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='webserver=' line='webserver=yes'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="webserver=" line="webserver=yes"
   - name: configure PDNS pdns.conf webserver listen on management IP addr
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='webserver-address=' line='webserver-address=192.168.2.4'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="webserver-address=" line="webserver-address=192.168.2.4"
   - name: configure PDNS pdns.conf webserver allow from management subnet
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='webserver-allow-from=' line='webserver-allow-from=192.168.2.0/24'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="webserver-allow-from=" line="webserver-allow-from=192.168.2.0/24"
   - name: configure PDNS pdns.conf remove launch=bind
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='launch=bind' line=''
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="launch=bind" line=""
   - name: configure PDNS pdns.conf mysql launch
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='launch=gmysql' line='launch=gmysql'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="launch=gmysql" line="launch=gmysql"
   - name: configure PDNS pdns.conf mysql host
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='gmysql-host=' line='gmysql-host=127.0.0.1'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="gmysql-host=" line="gmysql-host=127.0.0.1"
   - name: configure PDNS pdns.conf mysql user
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='gmysql-user=' line='gmysql-user=pdns'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="gmysql-user=" line="gmysql-user={{ mysql_pdns_user }}"
   - name: configure PDNS pdns.conf mysql database
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='gmysql-dbname=' line='gmysql-dbname=pdns'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="gmysql-dbname=" line="gmysql-dbname={{ mysql_pdns_dbname }}"
   - name: configure PDNS pdns.conf mysql password
-    lineinfile: dest=/etc/pdns/pdns.conf regexp='gmysql-password' line='gmysql-password=pdnsp4ss'
+    lineinfile: dest=/etc/pdns/pdns.conf regexp="gmysql-password" line="gmysql-password={{ mysql_pdns_password }}"
   - name: configure PDNS recursor 
-    lineinfile: dest=/etc/pdns-recursor/recursor.conf regexp='allow-from=' line='allow-from=127.0.0.0/8, 192.168.2.0/24'
+    lineinfile: dest=/etc/pdns-recursor/recursor.conf regexp="allow-from=" line="allow-from=127.0.0.0/8, 192.168.2.0/24"
   - name: start PDNS services
     service: name={{ item }} state=restarted
     with_items: "{{ services }}"
@@ -67,7 +70,6 @@
   - name: reload firewall
     command: /usr/bin/firewall-cmd --reload
   - name: change DNS 
-    lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-enp14s0  regexp='DNS1=' line='DNS1=192.168.2.4'
+    lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-enp14s0  regexp="DNS1=" line="DNS1=192.168.2.4"
   - name: restart network
     service: name=network state=restarted
-

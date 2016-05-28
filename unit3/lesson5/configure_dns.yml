@@ -1,9 +1,11 @@
 ---
 - hosts: jano.artemit.mgmt
-  remote_user: root
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
   vars: 
     server_uri_zones: 'http://192.168.2.4:8081/api/v1/servers/localhost/zones'
-    key: 'changeme'
     nameserver: 'ns1.artemit.mgmt.'
     domains:
       - "artemit.mgmt."
@@ -68,7 +70,7 @@
         body_format: json 
         body: {"name":"{{item}}","kind":"Master","dnssec":false,"masters":[],"nameservers":["{{nameserver}}"]} 
         headers: 
-           X-API-Key: "{{key}}" 
+           X-API-Key: "{{pdns_api_key}}" 
         status_code: 201 
         url: "{{server_uri_zones}}"
     with_items: "{{domains}}"
@@ -79,7 +81,7 @@
         body_format: json 
         body: {"rrsets":[{"name":"{{item}}","type":"SOA","ttl":3600,"changetype":"REPLACE","records":[{"content":"{{nameserver}} hostmaster.artemit.com.es. 0 10800 3600 604800 3600","disabled":false}]}]} 
         headers:
-           X-API-Key: "{{key}}" 
+           X-API-Key: "{{pdns_api_key}}" 
         url: "{{server_uri_zones}}/{{item}}"
     with_items: "{{domains}}"
 
@@ -89,7 +91,7 @@
         body_format: json 
         body: {"rrsets":[{"name":"{{item.name}}","type":"A","ttl":86400,"changetype":"REPLACE","records":[{"content":"{{item.ip}}","disabled":false}]}]} 
         headers:
-            X-API-Key: "{{key}}" 
+            X-API-Key: "{{pdns_api_key}}" 
         url: "{{server_uri_zones}}/{{item.domain}}"
     with_items: "{{hosts}}"
 
@@ -99,7 +101,7 @@
         body_format: json 
         body: {"rrsets":[{"name":"{{item.name}}","type":"CNAME","ttl":86400,"changetype":"REPLACE","records":[{"content":"{{item.alias}}","disabled":false}]}]} 
         headers: 
-           X-API-Key: "{{key}}"
+           X-API-Key: "{{pdns_api_key}}"
         url: "{{server_uri_zones}}/{{item.domain}}" 
     with_items: "{{aliases}}"
 

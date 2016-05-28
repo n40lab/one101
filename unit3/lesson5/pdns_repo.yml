@@ -1,6 +1,9 @@
 ---
 - hosts: jano.artemit.mgmt
-  remote_user: root
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
   tasks:
   - name: install yum plugin priorities
     yum: name=yum-plugin-priorities state=latest
