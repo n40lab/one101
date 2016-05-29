@@ -1,0 +1,16 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: install OpenNebula server
+    yum: name=opennebula-server  state=latest
+  - name: install some packages for ruby gems
+    yum: name={{ item }} state=latest
+    with_items: 
+      - redhat-lsb 
+      - ruby-devel 
+  - name: Install gems using OpenNebula's script
+    shell: yes 'y' | /usr/share/one/install_gems

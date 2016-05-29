@@ -1,0 +1,13 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: add collectd - management
+    command: /usr/bin/firewall-cmd --zone=management --add-port=4124/udp --permanent
+  - name: add NFS services - storage
+    command: /usr/bin/firewall-cmd --zone=storage --add-service=nfs --add-service=rpc-bind --add-service=mountd --permanent
+  - name: reload firewall
+    command: /usr/bin/firewall-cmd --reload

@@ -1,0 +1,22 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: disable SQLite DB
+    lineinfile: dest=/etc/one/oned.conf regexp='^DB = \[ backend = "sqlite" \]' line='#DB = [ backend = "sqlite" ]'
+  - name: add mariadb configuration
+    lineinfile: dest=/etc/one/oned.conf insertbefore="^# Sample configuration for MySQL" line="{{ item }}" 
+    with_items:
+      - 'DB = [  backend = "mysql",'
+      - '	server  = "127.0.0.1",'
+      - '	port    = 0,'
+      - '	user    = "{{ mysql_onedb_user }}",'
+      - '	passwd  = "{{ mysql_onedb_password }}",'
+      - '	db_name = "{{ mysql_onedb_dbname }}" ]'
+  - name: start one server
+    service: name=opennebula state=started
+  - name: enable one server
+    service: name=opennebula enabled=yes

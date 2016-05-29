@@ -1,0 +1,13 @@
+---
+- hosts: one-servers
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: add OpenNebula's repository
+    yum_repository:
+      name: opennebula
+      description: OpenNebula's repo
+      baseurl: http://downloads.opennebula.org/repo/5.0/CentOS/7/x86_64/
+      gpgcheck: no
