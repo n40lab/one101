@@ -1,0 +1,40 @@
+---
+- hosts: atlas.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  vars:
+    directories:
+      - partition: /dev/sdb1
+        path: /nfs1
+        fs: xfs
+      - partition: /dev/sdb2
+        path: /nfs2
+        fs: xfs 
+    services:
+      - rpcbind
+      - nfs-server
+  tasks:
+  - name: create mount points
+    file: path={{ item.path }} owner=oneadmin group=oneadmin recurse=yes state=directory
+    with_items: "{{directories}}"
+  - name: get blikds
+    shell: blkid -o export {{item.partition}} | grep ^UUID
+    register: blkid
+    with_items: "{{directories}}"
+  - name: add to /etc/fstab
+    mount: name="{{item.item.path}}" src={{ item.stdout }} fstype={{item.item.fs}} opts="defaults" dump=0 passno=0 state=present
+    with_items: "{{blkid.results}}"
+  - name: mount all partitions
+    shell: mount -a
+  - name: add files to exports
+    lineinfile: dest=/etc/exports regexp='{{item.path}}' line='{{ item.path }}/ *(rw,sync,no_subtree_check,no_root_squash)'
+    with_items: "{{directories}}"
+  - name: start and enable NFS services
+    service: name={{item}} state=started enabled=yes
+    with_items: "{{services}}"
+  - name: add NFS firewall rules - storage zone
+    command: /usr/bin/firewall-cmd --zone=storage --add-service=nfs --add-service=rpc-bind --add-service=mountd --permanent
+  - name: reload firewall rules
+    command: /usr/bin/firewall-cmd --reload
