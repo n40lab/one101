@@ -1,0 +1,25 @@
+---
+- hosts: one-worker-nodes
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: install OpenNebula packages
+    yum: name=opennebula-node-kvm state=latest
+  - name: configure libvirtd listen_tcp
+    lineinfile: dest=/etc/libvirt/libvirtd.conf regexp=listen_tcp line=listen_tcp=1
+  - name: configure libvirtd listen_tls
+    lineinfile: dest=/etc/libvirt/libvirtd.conf regexp=listen_tls line=listen_tls=0
+  - name: libvirtd will use a TCP port
+    lineinfile: dest=/etc/libvirt/libvirtd.conf regexp=LIBVIRTD_ARGS line='LIBVIRTD_ARGS="--listen"'
+  - name: enable libvirtd service
+    service: name=libvirtd enabled=yes
+  - name: start the libvirtd service
+    service: name=libvirtd state=started
+  - name: add libvirt service to firewall
+    command: /usr/bin/firewall-cmd --zone=management --add-service=libvirt --permanent
+  - name: reload firewall rules
+    command: /usr/bin/firewall-cmd --reload
+  - name: copy oneadmin ssh key to authorized keys
+    authorized_key: user=oneadmin key="{{ lookup('file', './id_rsa.pub') }}"
