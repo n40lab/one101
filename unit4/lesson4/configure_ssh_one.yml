@@ -1,6 +1,9 @@
 ---
 - hosts: one-servers
-  remote_user: root
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
   tasks: 
     - name: Allow users from specific addresses
       lineinfile: dest=/etc/ssh/sshd_config
@@ -12,7 +15,10 @@
       service: name=sshd state=restarted
 
 - hosts: jano.artemit.mgmt
-  remote_user: root
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
   tasks:
     - name: Add remote keys to known hosts file
       shell: ssh-keyscan {{ item }} >> /var/lib/one/.ssh/known_hosts
