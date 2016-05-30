@@ -1,0 +1,35 @@
+---
+- hosts: one-worker-nodes
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: save firewalld rules for iptables
+    shell: iptables -S | tee ~/firewalld_iptables
+  - name: save firewalld rules for ip6tables
+    shell: ip6tables -S | tee ~/firewalld_ip6tables
+  - name: insert filter at line1
+    lineinfile: dest="~/{{ item }}" insertbefore=BOF line='*filter'
+    with_items:
+      - firewalld_iptables
+      - firewalld_ip6tables
+  - name: insert commit at the end of file
+    lineinfile: dest="~/{{ item }}" insertafter=EOF line='COMMIT'
+    with_items:
+      - firewalld_iptables
+      - firewalld_ip6tables
+  - name: install iptables-services
+    yum: name=iptables-services state=latest
+  - name: restore firewall rules
+    shell: cat ~/firewalld_iptables > /etc/sysconfig/iptables
+  - name: restore firewall ip6 rules
+    shell: cat ~/firewalld_ip6tables > /etc/sysconfig/ip6tables
+  - name: disable firewalld
+    service: name=firewalld enabled=no state=stopped
+  - name: enable iptables
+    service: name="{{ item }}" enabled=yes state=started
+    with_items:
+      - iptables
+      - ip6tables
+  
