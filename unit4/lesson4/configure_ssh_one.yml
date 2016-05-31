@@ -1,5 +1,5 @@
 ---
-- hosts: one-servers
+- hosts: one_servers
   remote_user: ansible
   become: yes
   become_user: root
@@ -8,7 +8,7 @@
     - name: Allow users from specific addresses
       lineinfile: dest=/etc/ssh/sshd_config
                   regexp="^AllowUsers"
-                  line="AllowUsers artemit@192.168.1.200 ansible@192.168.2.4 oneadmin@192.168.2.4"
+                  line="AllowUsers artemit@192.168.1.200 ansible@192.168.1.200 ansible@192.168.2.4 oneadmin@192.168.2.4"
                   state=present
 
     - name: SSH service must be restarted
@@ -22,7 +22,7 @@
   tasks:
     - name: Add remote keys to known hosts file
       shell: ssh-keyscan {{ item }} >> /var/lib/one/.ssh/known_hosts
-      with_items: groups.one-worker-nodes
+      with_items: "{{ groups.one_worker_nodes }}"
 
     - name: Change known_hosts file permissions
       file: path=/var/lib/one/.ssh/known_hosts owner=oneadmin group=oneadmin mode=0600

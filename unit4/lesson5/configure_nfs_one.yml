@@ -1,0 +1,21 @@
+---
+- hosts: one-servers
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  vars: 
+    directories:
+      - id: 100
+        export: "atlas.artemit.stor:/nfs1"
+      - id: 101
+        export: "atlas.artemit.stor:/nfs2"
+  tasks:
+  - name: create mount points
+    file: path=/var/lib/one/datastores/{{item.id}} owner=oneadmin group=oneadmin recurse=yes state=directory
+    with_items: "{{directories}}"
+  - name: add to /etc/fstab
+    mount: name="/var/lib/one/datastores/{{item.id}}" src={{ item.export }} fstype=nfs opts="soft,intr,rsize=8192,wsize=8192,auto" dump=0 passno=0 state=present
+    with_items: "{{directories}}"
+  - name: mount all partitions
+    shell: mount -a
