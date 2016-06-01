@@ -1,0 +1,16 @@
+- hosts: one_worker_nodes
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: Remove default FORWARD reject rule
+    shell: iptables -D FORWARD -j REJECT --reject-with icmp-host-prohibited
+  - name: Remove default INPUT rules
+    shell: iptables -D INPUT -j REJECT --reject-with icmp-host-prohibited
+  - name: Change default FORWARD rule
+    shell: iptables -P FORWARD DROP
+  - name: Change default INPUT rules
+    shell: iptables -P INPUT DROP
+  - name: Save iptables rules
+    shell: /usr/libexec/iptables/iptables.init save
