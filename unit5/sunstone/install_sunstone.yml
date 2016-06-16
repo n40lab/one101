@@ -1,0 +1,21 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: install OpenNebula Sunstone server
+    yum: name=opennebula-sunstone  state=latest
+  - name: install some packages for ruby gems
+    yum: name={{ item }} state=latest
+    with_items: 
+      - redhat-lsb 
+      - ruby-devel 
+  - name: Install gems using OpenNebula's script
+    shell: yes 'y' | /usr/share/one/install_gems
+  - name: Start opennebula-sunstone service
+    service: name=opennebula-sunstone state=started
+  - name: Enable opennebula-sunstone service
+    service: name=opennebula-sunstone enabled=yes
+

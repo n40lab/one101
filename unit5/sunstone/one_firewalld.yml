@@ -1,0 +1,17 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: add 9869 sunstone port - management
+    command: /usr/bin/firewall-cmd --zone=management --add-port=9869/tcp --permanent
+  - name: add 29876 noVNC port - management
+    command: /usr/bin/firewall-cmd --zone=management --add-port=29876/tcp --permanent
+  - name: add 9869 sunstone port - public
+    command: /usr/bin/firewall-cmd --zone=public --add-port=9869/tcp --permanent
+  - name: add 29876 noVNC port - public
+    command: /usr/bin/firewall-cmd --zone=public --add-port=29876/tcp --permanent
+  - name: reload firewall
+    command: /usr/bin/firewall-cmd --reload
