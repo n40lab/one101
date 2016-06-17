@@ -18,4 +18,6 @@
     service: name=opennebula-sunstone state=started
   - name: Enable opennebula-sunstone service
     service: name=opennebula-sunstone enabled=yes
+  - name: Restart opennebula service
+    service: name=opennebula state=restarted
 

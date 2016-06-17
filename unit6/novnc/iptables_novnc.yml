@@ -1,0 +1,10 @@
+- hosts: one_worker_nodes
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: Allow ports 5900 to 65535 from Jano in management zone
+    shell: iptables -A IN_management_allow -p tcp -m tcp -s 192.168.2.4 --dport 5900:65535 -m conntrack --ctstate NEW -j ACCEPT
+  - name: Save iptables rules
+    shell: /usr/libexec/iptables/iptables.init save
