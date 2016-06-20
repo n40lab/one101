@@ -1,0 +1,19 @@
+---
+- hosts: atlas.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  vars:
+    directories:
+      - /pydio-config
+      - /pydio-data
+  tasks:
+  - name: create apache user
+    user: name=apache group=apache system=yes
+  - name: create directores for pydio
+    file: path="{{item}}" owner=apache group=apache state=directory mode=0755
+    with_items: "{{directories}}"
+  - name: add files to exports
+    lineinfile: dest=/etc/exports regexp='{{item}}' line='{{item}}/ *(rw,sync,no_subtree_check,no_root_squash)'
+    with_items: "{{directories}}"

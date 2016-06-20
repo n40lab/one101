@@ -1,0 +1,11 @@
+---
+- hosts: jano.artemit.mgmt
+  remote_user: ansible
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+  - name: create database for Pydio
+    mysql_db: name="{{ mysql_pydio_dbname }}" state=present
+  - name: add pydio user to Pydio database
+    mysql_user: login_user=root login_password="{{ mysql_root_password }}" name="{{ mysql_pydio_user }}" password="{{ mysql_pydio_password }}" priv="{{ mysql_pydio_dbname }}".*:ALL
